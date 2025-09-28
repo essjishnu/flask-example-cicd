@@ -2,7 +2,7 @@ pipeline {
   agent any
   environment {
     DOCKER_IMAGE = "flask-example-cicd"
-    SONAR_HOST_URL = "http://localhost:9000"
+    SONAR_HOST_URL = "http://sonarqube:9000"
     SONAR_PROJECT_KEY = "flask-example"
   }
   stages {
