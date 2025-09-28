@@ -19,7 +19,8 @@ pipeline {
         sh '''
           docker run --rm -v "$PWD":/app -w /app python:3.9-alpine sh -c "
             pip install flask pytest &&
-            pytest /app/test --disable-warnings -q || true
+            pytest test --disable-warnings -q || true
+
           "
         '''
       }
@@ -33,7 +34,7 @@ pipeline {
             -v "$PWD":/usr/src sonarsource/sonar-scanner-cli \
             -Dsonar.projectKey=$SONAR_PROJECT_KEY \
             -Dsonar.sources=flaskr \
-            -Dsonar.tests=test \
+            -Dsonar.tests=/usr/src/test \
             -Dsonar.python.version=3.9 \
             -Dsonar.sourceEncoding=UTF-8 \
             -Dsonar.login=$SONAR_TOKEN || true
@@ -44,7 +45,7 @@ pipeline {
       steps {
         sh '''
           docker rm -f flask-example || true
-          docker run -d --name flask-example -p 5000:8080 $DOCKER_IMAGE:$BUILD_NUMBER
+          docker run -d --name flask-example -p 7000:8080 $DOCKER_IMAGE:$BUILD_NUMBER
         '''
       }
     }
