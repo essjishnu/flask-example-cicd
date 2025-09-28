@@ -9,23 +9,24 @@ pipeline {
     stage('Checkout') {
       steps { checkout scm }
     }
+
     stage('Build Docker Image') {
       steps {
         sh 'docker build -t $DOCKER_IMAGE:$BUILD_NUMBER .'
       }
     }
+
     stage('Run Unit Tests (Pytest)') {
       steps {
         sh '''
           docker run --rm -v "$PWD":/app -w /app python:3.9-alpine sh -c "
-            pip install -r requirements.txt &&
-            pip install -e . &&
-            pip install pytest &&
+            pip install flask pytest &&
             pytest -q --disable-warnings --maxfail=1
           "
         '''
       }
     }
+
     stage('Code Quality - SonarQube') {
       environment { SONAR_TOKEN = credentials('sonar-token') }
       steps {
@@ -42,6 +43,7 @@ pipeline {
         '''
       }
     }
+
     stage('Deploy') {
       steps {
         sh '''
@@ -52,4 +54,3 @@ pipeline {
     }
   }
 }
-
