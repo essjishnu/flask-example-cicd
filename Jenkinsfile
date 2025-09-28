@@ -21,7 +21,7 @@ pipeline {
         sh '''
           docker run --rm -v "$PWD":/app -w /app python:3.9-alpine sh -c "
             pip install flask pytest &&
-            pytest ./test -q --disable-warnings --maxfail=1 || true
+            pytest /app/test -q --disable-warnings --maxfail=1 || true
           "
         '''
       }
