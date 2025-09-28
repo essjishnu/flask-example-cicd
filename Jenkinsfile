@@ -1,51 +1,61 @@
 pipeline {
   agent any
+
   environment {
     DOCKER_IMAGE = "flask-example-cicd"
-    SONAR_HOST_URL = "http://host.docker.internal:9000"
+    SONAR_HOST_URL = "http://sonarqube:9000"
     SONAR_PROJECT_KEY = "flask-example"
   }
+
   stages {
     stage('Checkout') {
-      steps { checkout scm }
+      steps {
+        checkout scm
+      }
     }
+
     stage('Build Docker Image') {
       steps {
         sh 'docker build -t $DOCKER_IMAGE:$BUILD_NUMBER .'
       }
     }
+
     stage('Run Unit Tests (Pytest)') {
       steps {
         sh '''
           docker run --rm -v "$PWD":/app -w /app python:3.9-alpine sh -c "
-            pip install flask pytest &&
-            pytest test --disable-warnings -q || true
-
+            pip install -r requirements.txt &&
+            pytest test --disable-warnings -q
           "
         '''
       }
     }
+
     stage('Code Quality - SonarQube') {
-      environment { SONAR_TOKEN = credentials('sonar-token') }
+      environment {
+        SONAR_TOKEN = credentials('sonar-token')
+      }
       steps {
         sh '''
           docker run --rm \
             -e SONAR_HOST_URL=$SONAR_HOST_URL \
-            -v "$PWD":/usr/src sonarsource/sonar-scanner-cli \
+            -e SONAR_LOGIN=$SONAR_TOKEN \
+            -v "$PWD":/usr/src \
+            sonarsource/sonar-scanner-cli \
             -Dsonar.projectKey=$SONAR_PROJECT_KEY \
             -Dsonar.sources=flaskr \
             -Dsonar.tests=test \
             -Dsonar.python.version=3.9 \
-            -Dsonar.sourceEncoding=UTF-8 \
-            -Dsonar.login=$SONAR_TOKEN || true
+            -Dsonar.sourceEncoding=UTF-8
         '''
       }
     }
+
     stage('Deploy') {
       steps {
         sh '''
           docker rm -f flask-example || true
-          docker run -d --name flask-example -p 7100:8080 $DOCKER_IMAGE:$BUILD_NUMBER
+          docker run -d --name flask-example -p 5000:5000 $DOCKER_IMAGE:$BUILD_NUMBER
         '''
       }
     }
