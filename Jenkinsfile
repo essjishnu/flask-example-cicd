@@ -1,42 +1,35 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    DOCKER_IMAGE = "flask-example-cicd"
-  }
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
-  stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t flask-example-cicd:latest .'
+            }
+        }
+
+        stage('Run Unit Tests (Pytest)') {
+            steps {
+                sh '''
+                  docker run --rm -v "$PWD":/code -w /code flask-example-cicd:latest \
+                  sh -c "pip install pytest && pytest test --disable-warnings -q"
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                  docker rm -f flask-example || true
+                  docker run -d --name flask-example -p 5000:8080 flask-example-cicd:latest
+                '''
+            }
+        }
     }
-
-    stage('Build Docker Image') {
-      steps {
-        sh 'docker build -t $DOCKER_IMAGE:$BUILD_NUMBER .'
-      }
-    }
-
-    stage('Run Unit Tests (Pytest)') {
-      steps {
-        sh '''
-          docker run --rm -v "$PWD":/app -w /app python:3.9-alpine sh -c "
-            pip install -r /app/requirements.txt &&
-            pip install pytest &&
-            pytest /app/test --disable-warnings -q
-          "
-        '''
-      }
-    }
-
-    stage('Deploy') {
-      steps {
-        sh '''
-          docker rm -f flask-example || true
-          docker run -d --name flask-example -p 5000:5000 $DOCKER_IMAGE:$BUILD_NUMBER
-        '''
-      }
-    }
-  }
 }
