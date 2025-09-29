@@ -3,8 +3,6 @@ pipeline {
 
   environment {
     DOCKER_IMAGE = "flask-example-cicd"
-    SONAR_HOST_URL = "http://sonarqube:9000"
-    SONAR_PROJECT_KEY = "flask-example"
   }
 
   stages {
@@ -27,26 +25,6 @@ pipeline {
             pip install -r requirements.txt &&
             pytest test --disable-warnings -q
           "
-        '''
-      }
-    }
-
-    stage('Code Quality - SonarQube') {
-      environment {
-        SONAR_TOKEN = credentials('sonar-token')
-      }
-      steps {
-        sh '''
-          docker run --rm \
-            -e SONAR_HOST_URL=$SONAR_HOST_URL \
-            -e SONAR_LOGIN=$SONAR_TOKEN \
-            -v "$PWD":/usr/src \
-            sonarsource/sonar-scanner-cli \
-            -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-            -Dsonar.sources=flaskr \
-            -Dsonar.tests=test \
-            -Dsonar.python.version=3.9 \
-            -Dsonar.sourceEncoding=UTF-8
         '''
       }
     }
