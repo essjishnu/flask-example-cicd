@@ -18,7 +18,7 @@ pipeline {
             steps {
                 sh '''
                   docker run --rm -v "$PWD":/code -w /code flask-example-cicd:latest \
-                  sh -c "pip install pytest && pytest test --disable-warnings -q"
+                  sh -c "pip install pytest && pytest /code/test --disable-warnings -q"
                 '''
             }
         }
