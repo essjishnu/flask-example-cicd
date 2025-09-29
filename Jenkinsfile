@@ -22,8 +22,9 @@ pipeline {
       steps {
         sh '''
           docker run --rm -v "$PWD":/app -w /app python:3.9-alpine sh -c "
-            pip install -r requirements.txt &&
-            pytest test --disable-warnings -q
+            pip install -r /app/requirements.txt &&
+            pip install pytest &&
+            pytest /app/test --disable-warnings -q
           "
         '''
       }
